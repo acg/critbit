@@ -1,5 +1,6 @@
 #include <string>
 #include <set>
+#include <stdlib.h>
 
 #include "critbit.h"
 

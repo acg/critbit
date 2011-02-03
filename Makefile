@@ -1,4 +1,14 @@
-targets: critbit.pdf critbit.o
+CFLAGS = -Wall -std=c99 -ggdb
+CXXFLAGS = -Wall -ggdb
+
+
+targets: critbit.pdf critbit.o critbit-test
+
+critbit-test: critbit-test.o critbit.o
+	$(CXX) -o $@ $(CXXFLAGS) $^
+
+critbit-test.o: critbit-test.cc
+	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
 critbit.pdf: critbit.w
 	cweave critbit.w
@@ -9,4 +19,5 @@ critbit.c: critbit.w
 
 critbit.o: critbit.c
 	ctangle critbit.w
-	gcc -Wall -c critbit.c -std=c99 -ggdb
+	$(CC) -Wall -c critbit.c -std=c99 -ggdb
+
