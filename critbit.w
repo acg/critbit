@@ -68,14 +68,18 @@ returns non-zero iff |u| $\in$ |t|.
 
 @c
   int
-  critbit0_contains(critbit0_tree *t, const char *u) {
+  critbit0_ncontains(critbit0_tree *t, const char *u, size_t ulen) {
     const uint8 *ubytes = (void *) u;
-    const size_t ulen = strlen(u);
     uint8 *p = t->root;
 
     @<Test for empty tree@>@;
     @<Walk tree for best member@>@;
     @<Check for successful membership@>@;
+  }
+
+  int
+  critbit0_contains(critbit0_tree *t, const char *u) {
+    return critbit0_ncontains(t, u, strlen(u));
   }
 
 @ An empty tree
@@ -150,7 +154,7 @@ Note that the pointer cannot be |NULL|. We tested that the root pointer was not
 then the tree would be invalid - that internal node should be removed.
 
 @<Check for successful me...@>=
-  return 0 == strcmp(u, (const char *) p);
+  return 0 == strncmp(u, (const char *) p, ulen);
 
 @* Inserting into the tree.
 
