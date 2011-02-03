@@ -2,6 +2,7 @@
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "critbit.h"
 #include "benchmark-data.h"
 
@@ -59,6 +60,29 @@ const char *stopwords[] = {
 };
 
 
+int testnum;
+int times;
+
+critbit0_tree crit;
+set<string> stdset;
+
+int test_critbit0() { return test_critbit0( &crit, testdata_article, times ); }
+int test_stdset() { return test_stdset( stdset, testdata_article, times ); }
+
+typedef struct
+{
+  const char *name;
+  int (*fn)(void);
+}
+benchmark_test;
+
+benchmark_test tests[] =
+{
+  { "critbit0", test_critbit0 },
+  { "std::set", test_stdset },
+};
+
+
 int main( int argc, char **argv )
 {
   if (argc != 3) {
@@ -66,11 +90,13 @@ int main( int argc, char **argv )
     exit(1);
   }
 
-  int testnum = atoi(argv[1]);
-  int times = atoi(argv[2]);
+  testnum = atoi( argv[1] );
+  times = atoi( argv[2] );
 
-  critbit0_tree crit;
-  set<string> stdset;
+  if (testnum < 0 || testnum >= (int)(sizeof(tests)/sizeof(tests[0]))) {
+    fprintf( stderr, "bad testnum %d\n", testnum );
+    exit(1);
+  }
 
   const char **w;
 
@@ -79,20 +105,21 @@ int main( int argc, char **argv )
     stdset.insert( *w );
   }
 
-  switch (testnum)
-  {
-    case 0:
-      test_critbit0( &crit, testdata_article, times );
-      break;
+  fprintf( stdout, "test %d: \"%s\" x %d ... ", testnum, tests[testnum].name, times );
+  fflush( stdout );
 
-    case 1:
-      test_stdset( stdset, testdata_article, times );
-      break;
+  timeval t1;
+  timeval t2;
+  timeval elapsed;
 
-    default:
-      fprintf( stderr, "bad testnum %d\n", testnum );
-      exit(1);
-  }
+  gettimeofday( &t1, 0 );
+  tests[testnum].fn();
+  gettimeofday( &t2, 0 );
+
+  timersub( &t2, &t1, &elapsed );
+
+  float secs = (float)elapsed.tv_sec + (float)elapsed.tv_usec / 1000000;
+  fprintf( stdout, "%.06f\n", secs );
 
   return 0;
 }
