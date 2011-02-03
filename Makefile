@@ -1,14 +1,35 @@
-CFLAGS = -Wall -std=c99 -ggdb
-CXXFLAGS = -Wall -ggdb
+TARGETS = benchmark critbit-test
+
+SOURCES_C = \
+	critbit.c
+
+SOURCES_CXX = \
+	critbit-test.cc \
+	benchmark-data.cc \
+	benchmark.cc
+
+OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cc=.o)
+
+CBOTHFLAGS += -Wall
+CBOTHFLAGS += -O2
+# CBOTHFLAGS += -ggdb
+CFLAGS += $(CBOTHFLAGS) -std=c99
+CXXFLAGS += $(CBOTHFLAGS)
 
 
-targets: critbit.pdf critbit.o critbit-test
+all: $(TARGETS)
+
+benchmark: benchmark.o benchmark-data.o critbit.o
+	$(CXX) -o $@ $(CXXFLAGS) $^
 
 critbit-test: critbit-test.o critbit.o
 	$(CXX) -o $@ $(CXXFLAGS) $^
 
-critbit-test.o: critbit-test.cc
-	$(CXX) -o $@ $(CXXFLAGS) -c $<
+%.o : %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.o : %.cc
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 critbit.pdf: critbit.w
 	cweave critbit.w
@@ -17,7 +38,6 @@ critbit.pdf: critbit.w
 critbit.c: critbit.w
 	ctangle critbit.w
 
-critbit.o: critbit.c
-	ctangle critbit.w
-	$(CC) -Wall -c critbit.c -std=c99 -ggdb
+clean:
+	rm -f $(TARGETS) $(OBJECTS)
 
