@@ -1,4 +1,6 @@
-TARGETS = benchmark critbit-test
+TARGETS = benchmark critbit-test libcritbit.a
+
+PREFIX ?= /usr
 
 SOURCES_C = \
 	critbit.c
@@ -26,6 +28,20 @@ benchmark: benchmark.o benchmark-data.o critbit.o
 
 critbit-test: critbit-test.o critbit.o
 	$(CXX) -o $@ $(CXXFLAGS) $^
+
+libcritbit.a: critbit.o
+	$(AR) rs $@ $^
+
+install: $(PREFIX)/lib/libcritbit.a $(PREFIX)/include/critbit.h
+
+$(PREFIX)/lib/libcritbit.a: libcritbit.a
+	install -p -D -m 0644 $< $@
+
+$(PREFIX)/include/critbit.h: critbit.h
+	install -p -D -m 0644 $< $@
+
+uninstall:
+	rm -f $(PREFIX)/lib/libcritbit.a $(PREFIX)/include/critbit.h
 
 run-benchmark: benchmark FORCE
 	@./benchmark 0 1000
