@@ -6,6 +6,13 @@
 #include "critbit.h"
 #include "benchmark-data.h"
 
+/* https://github.com/j0sh/radixtree */
+#define HAVE_RADIXTREE 1
+
+#if HAVE_RADIXTREE
+#  include "radix.h"
+#endif
+
 using namespace std;
 
 
@@ -33,7 +40,7 @@ int test_stdset( set<string>& stdset, const char **words, int times )
 
   for (i=0; i<times; i++)
     for (w=words, count=0; *w; w++) {
-      if (stdset.find( *w ) == stdset.end())
+      if (stdset.find( *w ) != stdset.end())
         count++;
     }
 
@@ -41,33 +48,38 @@ int test_stdset( set<string>& stdset, const char **words, int times )
 }
 
 
-const char *stopwords[] = {
-  "a", "able", "about", "across", "after", "all", "almost", "also", "am",
-  "among", "an", "and", "any", "are", "as", "at", "be", "because",
-  "been", "but", "by", "can", "cannot", "could", "dear", "did", "do",
-  "does", "either", "else", "ever", "every", "for", "from", "get", "got",
-  "had", "has", "have", "he", "her", "hers", "him", "his", "how",
-  "however", "i", "if", "in", "into", "is", "it", "its", "just", "least",
-  "let", "like", "likely", "may", "me", "might", "most", "must", "my",
-  "neither", "no", "nor", "not", "of", "off", "often", "on", "only",
-  "or", "other", "our", "own", "rather", "said", "say", "says", "she",
-  "should", "since", "so", "some", "than", "that", "the", "their",
-  "them", "then", "there", "these", "they", "this", "tis", "to", "too",
-  "twas", "us", "wants", "was", "we", "were", "what", "when", "where",
-  "which", "while", "who", "whom", "why", "will", "with", "would", "yet",
-  "you", "your",
-  0
-};
+#if HAVE_RADIXTREE
+int test_rxtree( rxt_node *rxtree, const char **words, int times )
+{
+  int i;
+  int count = 0;
+  const char **w;
+
+  for (i=0; i<times; i++)
+    for (w=words, count=0; *w; w++) {
+      if (rxt_get( (char*)*w, rxtree ))
+        count++;
+    }
+
+  return count;
+}
+#endif // HAVE_RADIXTREE
 
 
 int testnum;
 int times;
 
-critbit0_tree crit;
+critbit0_tree crit = {0};
 set<string> stdset;
+#if HAVE_RADIXTREE
+rxt_node *rxtree = 0;
+#endif
 
 int test_critbit0() { return test_critbit0( &crit, testdata_article, times ); }
 int test_stdset() { return test_stdset( stdset, testdata_article, times ); }
+#if HAVE_RADIXTREE
+int test_rxtree() { return test_rxtree( rxtree, testdata_article, times ); }
+#endif
 
 typedef struct
 {
@@ -78,13 +90,18 @@ benchmark_test;
 
 benchmark_test tests[] =
 {
-  { "critbit0", test_critbit0 },
-  { "std::set", test_stdset },
+  { "critbit0",  test_critbit0 },
+  { "std::set",  test_stdset },
+#if HAVE_RADIXTREE
+  { "radixtree", test_rxtree },
+#endif
 };
 
 
 int main( int argc, char **argv )
 {
+  /* Argument processing */
+
   if (argc != 3) {
     fprintf( stderr, "usage: %s testnum times\n", argv[0] );
     exit(1);
@@ -98,12 +115,23 @@ int main( int argc, char **argv )
     exit(1);
   }
 
+  /* Initialize tests */
+
+#if HAVE_RADIXTREE
+  rxtree = rxt_init();
+#endif
+
   const char **w;
 
-  for (w=stopwords; *w; w++) {
+  for (w=testdata_stopwords; *w; w++) {
     critbit0_insert( &crit, *w );
     stdset.insert( *w );
+#if HAVE_RADIXTREE
+    rxt_put( (char*)*w, (char*)*w, rxtree );
+#endif
   }
+
+  /* Run test */
 
   fprintf( stdout, "test %d: \"%s\" x %d ... ", testnum, tests[testnum].name, times );
   fflush( stdout );
@@ -113,13 +141,20 @@ int main( int argc, char **argv )
   timeval elapsed;
 
   gettimeofday( &t1, 0 );
-  tests[testnum].fn();
+  int rv = tests[testnum].fn();
   gettimeofday( &t2, 0 );
 
   timersub( &t2, &t1, &elapsed );
 
   float secs = (float)elapsed.tv_sec + (float)elapsed.tv_usec / 1000000;
-  fprintf( stdout, "%.06f\n", secs );
+  fprintf( stdout, "= %d %.06f\n", rv, secs );
+
+  /* Free tests */
+
+  critbit0_clear( &crit );
+#if HAVE_RADIXTREE
+  // rxt_free( rxtree ); // FIXME invalid free()
+#endif
 
   return 0;
 }
