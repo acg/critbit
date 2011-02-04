@@ -1,0 +1,19 @@
+Source: libcritbit
+Section: devel
+Priority: optional
+Maintainer: Alan Grow <alangrow+critbit@gmail.com>
+Standards-Version: 0.1.0
+Vcs-Git: https://acg@github.com/acg/critbit.git
+
+Package: libcritbit
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: A high speed data structure.
+  A critbit tree supports the following operations at high speed:
+  .
+  * See whether a string x is in the tree.
+  * Add x to the tree.
+  * Remove x from the tree.
+  * Find the lexicographically smallest string in the tree larger than x, if there is one.
+  .
+  A critbit tree can be used as a high-speed associative array.

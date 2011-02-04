@@ -1,6 +1,6 @@
 TARGETS = benchmark critbit-test libcritbit.a
 
-PREFIX ?= /usr
+PREFIX ?= $(DESTDIR)/usr
 
 SOURCES_C = \
 	critbit.c
