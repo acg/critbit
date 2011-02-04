@@ -154,7 +154,7 @@ Note that the pointer cannot be |NULL|. We tested that the root pointer was not
 then the tree would be invalid - that internal node should be removed.
 
 @<Check for successful me...@>=
-  return 0 == strncmp(u, (const char *) p, ulen);
+  return 0 == strncmp(u, (const char *) p, ulen+1);
 
 @* Inserting into the tree.
 
