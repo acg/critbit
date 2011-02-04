@@ -30,7 +30,8 @@ critbit-test: critbit-test.o critbit.o
 run-benchmark: benchmark FORCE
 	@./benchmark 0 1000
 	@./benchmark 1 1000
-	#@./benchmark 2 1000
+	@./benchmark 2 1000
+	#@./benchmark 3 1000
 
 %.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $<

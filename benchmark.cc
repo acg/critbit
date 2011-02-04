@@ -1,5 +1,6 @@
 #include <string>
 #include <set>
+#include <hash_set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -7,13 +8,14 @@
 #include "benchmark-data.h"
 
 /* https://github.com/j0sh/radixtree */
-#define HAVE_RADIXTREE 0
+#define HAVE_RADIXTREE 1
 
 #if HAVE_RADIXTREE
 #  include "radix.h"
 #endif
 
 using namespace std;
+using namespace __gnu_cxx;
 
 
 int test_critbit0( critbit0_tree *crit, const char **words, int times )
@@ -48,6 +50,22 @@ int test_stdset( set<string>& stdset, const char **words, int times )
 }
 
 
+int test_stdhashset( hash_set<const char*>& stdhashset, const char **words, int times )
+{
+  int i;
+  int count = 0;
+  const char **w;
+
+  for (i=0; i<times; i++)
+    for (w=words, count=0; *w; w++) {
+      if (stdhashset.find( *w ) != stdhashset.end())
+        count++;
+    }
+
+  return count;
+}
+
+
 #if HAVE_RADIXTREE
 int test_rxtree( rxt_node *rxtree, const char **words, int times )
 {
@@ -71,12 +89,14 @@ int times;
 
 critbit0_tree crit = {0};
 set<string> stdset;
+hash_set<const char*> stdhashset;
 #if HAVE_RADIXTREE
 rxt_node *rxtree = 0;
 #endif
 
 int test_critbit0() { return test_critbit0( &crit, testdata_article, times ); }
 int test_stdset() { return test_stdset( stdset, testdata_article, times ); }
+int test_stdhashset() { return test_stdhashset( stdhashset, testdata_article, times ); }
 #if HAVE_RADIXTREE
 int test_rxtree() { return test_rxtree( rxtree, testdata_article, times ); }
 #endif
@@ -92,6 +112,7 @@ benchmark_test tests[] =
 {
   { "critbit0",  test_critbit0 },
   { "std::set",  test_stdset },
+  { "__gnu_cxx::hash_set",  test_stdhashset },
 #if HAVE_RADIXTREE
   { "radixtree", test_rxtree },
 #endif
@@ -123,9 +144,11 @@ int main( int argc, char **argv )
 
   const char **w;
 
-  for (w=testdata_stopwords; *w; w++) {
+  for (w=testdata_stopwords; *w; w++)
+  {
     critbit0_insert( &crit, *w );
     stdset.insert( *w );
+    stdhashset.insert( *w );
 #if HAVE_RADIXTREE
     rxt_put( (char*)*w, (char*)*w, rxtree );
 #endif
