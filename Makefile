@@ -13,13 +13,12 @@ OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cc=.o)
 CBOTHFLAGS += -Wall
 CBOTHFLAGS += -O2
 # CBOTHFLAGS += -ggdb
+# CBOTHFLAGS += -pg
 CFLAGS += $(CBOTHFLAGS) -std=c99
 CXXFLAGS += $(CBOTHFLAGS)
 
 
 all: $(TARGETS)
-
-FORCE:
 
 benchmark: benchmark.o benchmark-data.o critbit.o
 #benchmark: benchmark.o benchmark-data.o critbit.o radix.o
@@ -45,6 +44,8 @@ critbit.pdf: critbit.w
 
 critbit.c: critbit.w
 	ctangle critbit.w
+
+FORCE:
 
 clean:
 	rm -f $(TARGETS) $(OBJECTS)
