@@ -8,7 +8,7 @@
 #include "benchmark-data.h"
 
 /* https://github.com/j0sh/radixtree */
-#define HAVE_RADIXTREE 1
+#define HAVE_RADIXTREE 0
 
 #if HAVE_RADIXTREE
 #  include "radix.h"
